@@ -1,17 +1,14 @@
 FROM node:20-slim
 
-# 🔥 Install OpenSSL (REQUIRED for Prisma)
-RUN apt-get update -y && apt-get install -y openssl
-
 WORKDIR /app
+
+RUN apt-get update -y && apt-get install -y openssl
 
 COPY package*.json ./
 RUN npm install
 
-COPY prisma ./prisma
-RUN npm run prisma:generate
-
 COPY . .
+
 RUN npm run build
 
-CMD ["node", "dist/main.js"]
+CMD sh -c "npx prisma generate && node dist/main.js"
