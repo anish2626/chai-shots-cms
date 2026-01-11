@@ -95,9 +95,10 @@ model User {
   createdAt DateTime @default(now())
 }
 
-/* =======================
-   ENUMS (ONLY REQUIRED)
-   ======================= */
+// =======================
+// ENUMS (ONLY REQUIRED)
+// =======================
+
 
 enum ProgramStatus {
   draft

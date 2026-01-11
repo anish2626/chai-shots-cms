@@ -2,18 +2,22 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Prisma needs OpenSSL
+# Prisma requires OpenSSL
 RUN apt-get update -y && apt-get install -y openssl
 
-# Install deps
+# Copy package.json first (for caching)
 COPY package*.json ./
 RUN npm install
 
-# Copy source
+# Copy full source INCLUDING prisma
 COPY . .
+
+# 🔥 THIS IS THE IMPORTANT LINE (YOU WERE MISSING THIS)
+RUN npx prisma generate
 
 # Build NestJS
 RUN npm run build
 
-# Generate Prisma + run app at runtime
-CMD sh -c "npx prisma generate && node dist/main.js"
+EXPOSE 3000
+
+CMD ["node", "dist/main.js"]
