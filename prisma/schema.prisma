@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Program {
+  id                 String         @id @default(uuid())
+  title              String
+  description        String?
+  languagePrimary    String
+  languagesAvailable String[]
+  status             ProgramStatus  @default(draft)
+  publishedAt        DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  assets             ProgramAsset[]
+  terms              Term[]
+
+  @@index([status, languagePrimary, publishedAt])
+}
+
+model Term {
+  id         String   @id @default(uuid())
+  programId  String
+  termNumber Int
+  title      String?
+  createdAt  DateTime @default(now())
+  lessons    Lesson[]
+  program    Program  @relation(fields: [programId], references: [id])
+
+  @@unique([programId, termNumber])
+}
+
+model Lesson {
+  id                        String        @id @default(uuid())
+  termId                    String
+  lessonNumber              Int
+  title                     String
+  contentType               String
+  durationMs                Int?
+  isPaid                    Boolean       @default(false)
+  contentLanguagePrimary    String
+  contentLanguagesAvailable String[]
+  contentUrlsByLanguage     Json
+  status                    LessonStatus  @default(draft)
+  publishAt                 DateTime?
+  publishedAt               DateTime?
+  createdAt                 DateTime      @default(now())
+  updatedAt                 DateTime      @updatedAt
+  term                      Term          @relation(fields: [termId], references: [id])
+  assets                    LessonAsset[]
+
+  @@unique([termId, lessonNumber])
+  @@index([status, publishAt])
+}
+
+model ProgramAsset {
+  id        String  @id @default(uuid())
+  programId String
+  language  String
+  variant   Variant
+  url       String
+  program   Program @relation(fields: [programId], references: [id])
+
+  @@unique([programId, language, variant])
+}
+
+model LessonAsset {
+  id       String  @id @default(uuid())
+  lessonId String
+  language String
+  variant  Variant
+  url      String
+  lesson   Lesson  @relation(fields: [lessonId], references: [id])
+
+  @@unique([lessonId, language, variant])
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      UserRole
+  createdAt DateTime @default(now())
+}
+
+enum ProgramStatus {
+  draft
+  published
+  archived
+}
+
+enum LessonStatus {
+  draft
+  scheduled
+  published
+  archived
+}
+
+enum Variant {
+  portrait
+  landscape
+  square
+  banner
+}
+
+enum UserRole {
+  admin
+  editor
+  viewer
+}
