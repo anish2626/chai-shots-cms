@@ -4,22 +4,22 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://postgres:postgres@db:5432/chaishots"
+  url      = env("DATABASE_URL")
 }
 
-
 model Program {
-  id                 String         @id @default(uuid())
+  id                 String        @id @default(uuid())
   title              String
   description        String?
   languagePrimary    String
   languagesAvailable String[]
-  status             ProgramStatus  @default(draft)
+  status             ProgramStatus @default(draft)
   publishedAt        DateTime?
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
-  assets             ProgramAsset[]
-  terms              Term[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  assets ProgramAsset[]
+  terms  Term[]
 
   @@index([status, languagePrimary, publishedAt])
 }
@@ -30,30 +30,34 @@ model Term {
   termNumber Int
   title      String?
   createdAt  DateTime @default(now())
-  lessons    Lesson[]
-  program    Program  @relation(fields: [programId], references: [id])
+
+  program Program  @relation(fields: [programId], references: [id])
+  lessons Lesson[]
 
   @@unique([programId, termNumber])
 }
 
 model Lesson {
-  id                        String        @id @default(uuid())
+  id                        String       @id @default(uuid())
   termId                    String
   lessonNumber              Int
   title                     String
   contentType               String
   durationMs                Int?
-  isPaid                    Boolean       @default(false)
+  isPaid                    Boolean      @default(false)
+
   contentLanguagePrimary    String
   contentLanguagesAvailable String[]
   contentUrlsByLanguage     Json
-  status                    LessonStatus  @default(draft)
-  publishAt                 DateTime?
-  publishedAt               DateTime?
-  createdAt                 DateTime      @default(now())
-  updatedAt                 DateTime      @updatedAt
-  term                      Term          @relation(fields: [termId], references: [id])
-  assets                    LessonAsset[]
+
+  status       LessonStatus @default(draft)
+  publishAt    DateTime?
+  publishedAt  DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  term   Term          @relation(fields: [termId], references: [id])
+  assets LessonAsset[]
 
   @@unique([termId, lessonNumber])
   @@index([status, publishAt])
@@ -65,7 +69,8 @@ model ProgramAsset {
   language  String
   variant   Variant
   url       String
-  program   Program @relation(fields: [programId], references: [id])
+
+  program Program @relation(fields: [programId], references: [id])
 
   @@unique([programId, language, variant])
 }
@@ -76,7 +81,8 @@ model LessonAsset {
   language String
   variant  Variant
   url      String
-  lesson   Lesson  @relation(fields: [lessonId], references: [id])
+
+  lesson Lesson @relation(fields: [lessonId], references: [id])
 
   @@unique([lessonId, language, variant])
 }
@@ -88,6 +94,10 @@ model User {
   role      UserRole
   createdAt DateTime @default(now())
 }
+
+/* =======================
+   ENUMS (ONLY REQUIRED)
+   ======================= */
 
 enum ProgramStatus {
   draft
